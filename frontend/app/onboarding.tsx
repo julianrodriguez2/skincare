@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import { router } from "expo-router";
+import { auth } from "@/utils/firebaseConfig";
 
 const SKIN_TYPES = ["dry", "oily", "combo", "sensitive"];
 const CONCERNS = ["acne", "redness", "dryness", "dark spots"];
@@ -26,12 +27,34 @@ export default function OnboardingScreen() {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!skinType || !budget || concerns.length === 0) {
       alert("Please fill out all fields.");
       return;
     }
-    router.replace("/(tabs)/home");
+
+    try {
+      const uid = auth.currentUser?.uid;
+      const res = await fetch("http://localhost:5000/api/user/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid,
+          skinType,
+          concerns,
+          budget,
+          hasOnboarded: true,
+        }),
+      });
+
+      if (res.ok) {
+        router.replace("/(tabs)/home");
+      } else {
+        alert("Failed to save profile.");
+      }
+    } catch (err) {
+      alert("Error: " + err);
+    }
   };
 
   return (

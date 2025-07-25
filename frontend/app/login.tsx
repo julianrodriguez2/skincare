@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
+// import { getUserProfile } from "@/utils/userService";
 import { auth } from "@/utils/firebaseConfig";
 import { router } from "expo-router";
 
@@ -17,8 +18,17 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.replace("/onboarding");
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const uid = userCred.user.uid;
+
+      const res = await fetch(`http://localhost:5000/api/user/${uid}`);
+      const data = await res.json();
+
+      if (data.hasOnboarded) {
+        router.replace("/(tabs)/home");
+      } else {
+        router.replace("/onboarding");
+      }
     } catch (err: any) {
       alert(err.message);
     }
